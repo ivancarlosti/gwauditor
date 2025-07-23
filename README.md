@@ -1,6 +1,7 @@
 # Google Workspace Auditor script
 This script collects users, groups and Shared Drives of a Google Workspace environment on .xlsx file for audit and review purposes
 
+<!-- buttons -->
 [![Stars](https://img.shields.io/github/stars/ivancarlosti/gwauditor?label=⭐%20Stars&color=gold&style=flat)](https://github.com/ivancarlosti/gwauditor/stargazers)
 [![GitHub last commit](https://img.shields.io/github/last-commit/ivancarlosti/gwauditor?label=Last%20Commit)](https://github.com/ivancarlosti/gwauditor/commits)
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ivancarlosti/gwauditor?label=Activity)](https://github.com/ivancarlosti/gwauditor/pulse)
@@ -8,6 +9,7 @@ This script collects users, groups and Shared Drives of a Google Workspace envir
 [![License](https://img.shields.io/github/license/ivancarlosti/gwauditor?label=License)](LICENSE)
 [![Security](https://img.shields.io/badge/Security-View%20Here-purple)](https://github.com/ivancarlosti/gwauditor/security)
 [![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-1.4-4baaaa)](https://github.com/ivancarlosti/gwauditor/tree/main?tab=coc-ov-file)
+<!-- endbuttons -->
 
 ## Details
 This script collects users, groups, mailboxes delegation, Shared Drives, YouTube accounts, Analytics accounts, policies of a [Google Workspace](https://workspace.google.com/) environment on .xlsx file for audit and review purposes, the file is archived in a .zip file including a screenshot with hash MD5 of the .xlsx file and the script executed. Note that it's prepared to run on [GAM](https://github.com/GAM-team/GAM/) configured for multiple projects, change accordly if needed. This project also offer extra features:
@@ -55,6 +57,7 @@ You can find scripts related to mailbox delegation and mailbox archive to group 
 * PowerShell
 * Module `ImportExcel` on PowerShell (not required to run extra features)
 
+<!-- footer -->
 ---
 
 ## 🧑‍💻 Consulting and technical support
