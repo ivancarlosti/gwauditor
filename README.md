@@ -83,9 +83,6 @@ You can find scripts related to mailbox delegation and mailbox archive to group 
 [![Website](https://img.shields.io/badge/Website-ivancarlos.me-FF6B6B)](https://ivancarlos.me)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/ivancarlosti?label=GitHub%20Sponsors&color=ffc0cb)][sponsor]
 
-## 📃 License
-[MIT](LICENSE) © [Ivan Carlos][ivancarlos]
-
 [cc]: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-a-code-of-conduct-to-your-project
 [contributing]: https://docs.github.com/en/articles/setting-guidelines-for-repository-contributors
 [security]: https://docs.github.com/en/code-security/getting-started/adding-a-security-policy-to-your-repository
