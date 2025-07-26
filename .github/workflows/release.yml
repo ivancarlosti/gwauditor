@@ -28,11 +28,18 @@ jobs:
         id: version
         run: |
           VERSION_FILE="manifest.json"
+          DEFAULT_VERSION="1.00.000"
 
           if [ -f "$VERSION_FILE" ]; then
-            VERSION=$(jq -r '.version' "$VERSION_FILE")
+            HAS_VERSION=$(jq 'has("version")' "$VERSION_FILE")
+            if [ "$HAS_VERSION" = "true" ]; then
+              VERSION=$(jq -r '.version' "$VERSION_FILE")
+              [ "$VERSION" = "null" ] && VERSION="$DEFAULT_VERSION"
+            else
+              VERSION="$DEFAULT_VERSION"
+            fi
           else
-            VERSION="1.00.000"
+            VERSION="$DEFAULT_VERSION"
           fi
 
           MAJOR=$(echo $VERSION | cut -d. -f1)
@@ -60,10 +67,22 @@ jobs:
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_OUTPUT
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
 
-      - name: 🛠 Update manifest.json
+      - name: 🛠 Update or create manifest.json
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          echo "{ \"version\": \"$VERSION\" }" > manifest.json
+          VERSION_FILE="manifest.json"
+          AUTHOR="Ivan Carlos"
+
+          if [ -f "$VERSION_FILE" ]; then
+            HAS_VERSION=$(jq 'has("version")' "$VERSION_FILE")
+            if [ "$HAS_VERSION" = "true" ]; then
+              jq --arg v "$VERSION" --arg a "$AUTHOR" '.version = $v | .author = $a' "$VERSION_FILE" > tmp.json && mv tmp.json "$VERSION_FILE"
+            else
+              jq --arg v "$VERSION" --arg a "$AUTHOR" '. + {version: $v, author: $a}' "$VERSION_FILE" > tmp.json && mv tmp.json "$VERSION_FILE"
+            fi
+          else
+            echo "{ \"version\": \"$VERSION\", \"author\": \"$AUTHOR\" }" > "$VERSION_FILE"
+          fi
 
       - name: 💾 Commit and push updated manifest.json
         run: |
@@ -89,5 +108,3 @@ jobs:
 
             ${{ steps.changed_files.outputs.CHANGED }}
           files: ${{ steps.version.outputs.ZIP_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
