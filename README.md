@@ -55,7 +55,7 @@ You can find scripts related to mailbox delegation and mailbox archive to group 
 
 ## Requirements
 * Windows 10+ or Windows Server 2019+
-* [GAM v7+](https://github.com/GAM-team/GAM/) using multiproject setup 
+* [GAM v5+](https://github.com/GAM-team/GAM/) using multiproject setup 
 * PowerShell
 * Module `ImportExcel` on PowerShell (not required to run extra features)
 
