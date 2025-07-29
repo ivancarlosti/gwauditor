@@ -19,22 +19,43 @@ function Show-Menu {
 
 function Select-GAMProject {
     cls
-    Write-Host "Projects available:" $directories
+    # Refresh project list every time in case of changes
+    $directories = Get-ChildItem -Path $gamsettings -Directory -Exclude "gamcache" | Select-Object -ExpandProperty Name
+
+    Write-Host "Projects available:"
+    for ($i = 0; $i -lt $directories.Count; $i++) {
+        Write-Host "$($i + 1). $($directories[$i])"
+    }
     Write-Host
 
     $selectedProject = $null
-    while (($Null -eq $selectedProject) -or ($selectedProject -eq '') -or ((& "$GAMpath\gam.exe" select $selectedProject 2>&1) -match "ERROR")) {
-        $selectedProject = Read-Host -Prompt "Please enter project shortname"
-        if ((& "$GAMpath\gam.exe" select $selectedProject 2>&1) -match "ERROR") {
-            Write-Host "Invalid project shortname. Please try again."
-        }
+    while (-not $selectedProject) {
+        $selection = Read-Host "Please enter project number"
+
+		[int]$parsedSelection = 0
+		if ([int]::TryParse($selection, [ref]$parsedSelection) -and 
+			$parsedSelection -ge 1 -and 
+			$parsedSelection -le $directories.Count) {
+			
+			$chosenProject = $directories[$parsedSelection - 1]
+
+			if ((& "$GAMpath\gam.exe" select $chosenProject 2>&1) -match "ERROR") {
+				Write-Host "Selected project '$chosenProject' is invalid. Please try again."
+			} else {
+				$selectedProject = $chosenProject
+			}
+		} else {
+			Write-Host "Invalid selection. Please enter a number between 1 and $($directories.Count)."
+		}
+
     }
 
     Write-Host "GAM project selected: $selectedProject"
     & "$GAMpath\gam.exe" select $selectedProject save
-    $global:clientName = $selectedProject  # Ensure it's set globally
+    $global:clientName = $selectedProject  # Set globally
     Write-Host "DEBUG: clientName is set to $clientName"
 }
+
 
 function Run-AuditReportScript {
     Start-Process PowerShell -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File .\_script_AuditReport.ps1 -clientName $clientName -GAMpath $GAMpath -gamsettings $gamsettings -datetime $datetime -destinationpath $destinationpath" -Wait
