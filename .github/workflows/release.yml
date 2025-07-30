@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:    # Allows manual trigger from Actions tab
 
 jobs:
   release:
