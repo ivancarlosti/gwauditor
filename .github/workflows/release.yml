@@ -5,6 +5,9 @@ on:
     branches:
       - main
   workflow_dispatch:    # Allows manual trigger from Actions tab
+  schedule:
+    # Runs the workflow every day at 14:17 AM UTC
+    - cron: '17 14 * * *'
 
 jobs:
   release:
