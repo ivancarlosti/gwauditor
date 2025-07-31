@@ -17,18 +17,34 @@ jobs:
       contents: write  # Required to push and publish releases
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout code with full history and tags
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Fetch all history and tags
 
+      - name: Get latest tag
+        id: get_tag
+        run: |
+          git fetch --tags
+          echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+
+      - name: Check if commits exist since latest tag
+        id: check_commits
+        run: |
+          LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
+          COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
+          echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
+
+      # The following steps only run if there are new commits:
       - name: 📃 Get list of changed files
+        if: steps.check_commits.outputs.commit_count != '0'
         id: changed_files
         run: |
           echo "CHANGED=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')" >> $GITHUB_OUTPUT
           echo "COUNT=$(git diff --name-only HEAD^ HEAD | wc -l)" >> $GITHUB_OUTPUT
 
       - name: 🔢 Determine version
+        if: steps.check_commits.outputs.commit_count != '0'
         id: version
         run: |
           VERSION_FILE="manifest.json"
@@ -72,6 +88,7 @@ jobs:
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
 
       - name: 🛠 Update or create manifest.json
+        if: steps.check_commits.outputs.commit_count != '0'
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
           VERSION_FILE="manifest.json"
@@ -89,6 +106,7 @@ jobs:
           fi
 
       - name: 💾 Commit and push updated manifest.json
+        if: steps.check_commits.outputs.commit_count != '0'
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
@@ -97,11 +115,13 @@ jobs:
           git push origin main
 
       - name: 📦 Create ZIP package (excluding README.md)
+        if: steps.check_commits.outputs.commit_count != '0'
         run: |
           ZIP_NAME="${{ steps.version.outputs.ZIP_NAME }}"
           zip -r "$ZIP_NAME" . -x ".git/*" ".github/*" "README.md"
 
       - name: 🚀 Create GitHub Release
+        if: steps.check_commits.outputs.commit_count != '0'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: "v${{ steps.version.outputs.VERSION }}"
