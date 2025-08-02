@@ -43,6 +43,45 @@ jobs:
           echo "CHANGED=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')" >> $GITHUB_OUTPUT
           echo "COUNT=$(git diff --name-only HEAD^ HEAD | wc -l)" >> $GITHUB_OUTPUT
 
+      - name: Get latest release tag (from GitHub API)
+        if: steps.check_commits.outputs.commit_count != '0'
+        id: get_latest_release
+        run: |
+          LATEST_RELEASE_TAG=$(curl -sL -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r .tag_name)
+          # Remove leading 'v' if present
+          LATEST_RELEASE_VERSION="${LATEST_RELEASE_TAG#v}"
+          # Use default if empty
+          if [ -z "$LATEST_RELEASE_VERSION" ] || [ "$LATEST_RELEASE_VERSION" = "null" ]; then
+            LATEST_RELEASE_VERSION="1.00.000"
+          fi
+          echo "latest_release_version=$LATEST_RELEASE_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get manifest version
+        if: steps.check_commits.outputs.commit_count != '0'
+        id: get_manifest_version
+        run: |
+          if [ -f manifest.json ]; then
+            MANIFEST_VERSION=$(jq -r '.version // empty' manifest.json)
+            # Set default if missing or null
+            if [ -z "$MANIFEST_VERSION" ] || [ "$MANIFEST_VERSION" = "null" ]; then
+              MANIFEST_VERSION="1.00.000"
+            fi
+          else
+            MANIFEST_VERSION="1.00.000"
+          fi
+          echo "manifest_version=$MANIFEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Pick base version
+        if: steps.check_commits.outputs.commit_count != '0'
+        id: pick_base_version
+        run: |
+          LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version }}"
+          MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version }}"
+          # Using python3 for correct semantic version comparison
+          BASE_VERSION=$(python3 -c "from packaging import version; print(str(max(version.parse('$LATEST_RELEASE'), version.parse('$MANIFEST'))))")
+          echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
+
       - name: 🔢 Determine version
         if: steps.check_commits.outputs.commit_count != '0'
         id: version
@@ -50,21 +89,11 @@ jobs:
           VERSION_FILE="manifest.json"
           DEFAULT_VERSION="1.00.000"
 
-          if [ -f "$VERSION_FILE" ]; then
-            HAS_VERSION=$(jq 'has("version")' "$VERSION_FILE")
-            if [ "$HAS_VERSION" = "true" ]; then
-              VERSION=$(jq -r '.version' "$VERSION_FILE")
-              [ "$VERSION" = "null" ] && VERSION="$DEFAULT_VERSION"
-            else
-              VERSION="$DEFAULT_VERSION"
-            fi
-          else
-            VERSION="$DEFAULT_VERSION"
-          fi
+          BASE_VERSION="${{ steps.pick_base_version.outputs.base_version }}"
 
-          MAJOR=$(echo $VERSION | cut -d. -f1)
-          MINOR=$(echo $VERSION | cut -d. -f2)
-          PATCH=$(echo $VERSION | cut -d. -f3)
+          MAJOR=$(echo $BASE_VERSION | cut -d. -f1)
+          MINOR=$(echo $BASE_VERSION | cut -d. -f2)
+          PATCH=$(echo $BASE_VERSION | cut -d. -f3)
 
           COUNT="${{ steps.changed_files.outputs.COUNT }}"
 
