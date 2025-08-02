@@ -118,7 +118,7 @@ jobs:
         if: steps.check_commits.outputs.commit_count != '0'
         run: |
           ZIP_NAME="${{ steps.version.outputs.ZIP_NAME }}"
-          zip -r "$ZIP_NAME" . -x ".git/*" ".github/*" "README.md"
+          zip -r "$ZIP_NAME" . -x ".git/*" ".github/*" "docker/*" ".dockerignore" "CNAME" "Dockerfile" "README.md" "LICENSE"
 
       - name: 🚀 Create GitHub Release
         if: steps.check_commits.outputs.commit_count != '0'
