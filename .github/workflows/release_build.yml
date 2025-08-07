@@ -6,7 +6,6 @@ on:
       - main
   workflow_dispatch:
   schedule:
-    # Runs every day at 5:28 AM UTC
     - cron: '28 5 * * *'
 
 jobs:
@@ -14,14 +13,14 @@ jobs:
     name: Build & Release
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Build & Push Docker image
-      packages: write  # Push & Publish Release
+      contents: write
+      packages: write
 
     steps:
       - name: 📥 Checkout code with full history and tags
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Fetch all history and tags
+          fetch-depth: 0
 
       - name: Get latest tag
         id: get_tag
@@ -36,11 +35,15 @@ jobs:
           COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
           echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
 
-      - name: 📃 Get list of changed files
+      - name: 📃 Get list of changed files (Markdown bullet list)
         if: steps.check_commits.outputs.commit_count != '0'
         id: changed_files
         run: |
-          echo "CHANGED=$(git diff --name-only HEAD^ HEAD | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          # Generate bullet list of changed files
+          BULLET_LIST="$(git diff --name-only HEAD^ HEAD | sed 's/^/- /')"
+          echo "CHANGED<<EOF" >> $GITHUB_OUTPUT
+          echo "$BULLET_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           COUNT=$(git diff --name-only HEAD^ HEAD | wc -l)
           echo "COUNT=$COUNT" >> $GITHUB_OUTPUT
 
@@ -50,9 +53,7 @@ jobs:
         run: |
           LATEST_RELEASE_TAG=$(curl -sL -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r .tag_name)
-          # Remove leading 'v' if present
           LATEST_RELEASE_VERSION="${LATEST_RELEASE_TAG#v}"
-          # Use default if empty/null
           if [ -z "$LATEST_RELEASE_VERSION" ] || [ "$LATEST_RELEASE_VERSION" = "null" ]; then
             LATEST_RELEASE_VERSION="1.0.0"
           fi
@@ -78,7 +79,6 @@ jobs:
         run: |
           LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version }}"
           MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version }}"
-          # Use python3 packaging.version to pick higher version as base
           BASE_VERSION=$(python3 -c "from packaging import version; print(str(max(version.parse('$LATEST_RELEASE'), version.parse('$MANIFEST'))))")
           echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
 
@@ -87,30 +87,21 @@ jobs:
         id: version
         run: |
           BASE_VERSION="${{ steps.pick_base_version.outputs.base_version }}"
-
           IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
-
           COUNT="${{ steps.changed_files.outputs.COUNT }}"
-
           if [ "$COUNT" -ge 5 ]; then
-            # major bump
             MAJOR=$((MAJOR + 1))
             MINOR=0
             PATCH=0
           elif [ "$COUNT" -ge 3 ]; then
-            # minor bump
             MINOR=$((MINOR + 1))
             PATCH=0
           else
-            # patch bump (1 or 2 files changed)
             PATCH=$((PATCH + 1))
           fi
-
           NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-
           REPO_NAME=$(basename $GITHUB_REPOSITORY)
           ZIP_NAME="${REPO_NAME}-${NEW_VERSION}.zip"
-
           echo "VERSION=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_OUTPUT
           echo "REPO_NAME=$REPO_NAME" >> $GITHUB_OUTPUT
@@ -121,7 +112,6 @@ jobs:
           VERSION="${{ steps.version.outputs.VERSION }}"
           VERSION_FILE="manifest.json"
           AUTHOR="Ivan Carlos"
-
           if [ -f "$VERSION_FILE" ]; then
             HAS_VERSION=$(jq 'has("version")' "$VERSION_FILE")
             if [ "$HAS_VERSION" = "true" ]; then
@@ -161,7 +151,7 @@ jobs:
             ${{ steps.changed_files.outputs.CHANGED }}
           files: ${{ steps.version.outputs.ZIP_NAME }}
 
-      # ---------- 🐳🚀 DOCKER IMAGE BUILD & PUSH STEPS 🐋📦 ----------
+      # ----- Docker steps (unchanged except for minor fixes) -----
       - name: 🔍 Check if Dockerfile exists
         if: steps.check_commits.outputs.commit_count != '0'
         id: dockerfile_check
@@ -170,7 +160,6 @@ jobs:
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
-          fi
 
       - name: 🛠 Set up Docker Buildx
         if: steps.check_commits.outputs.commit_count != '0' && steps.dockerfile_check.outputs.exists == 'true'
