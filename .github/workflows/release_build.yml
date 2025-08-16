@@ -15,7 +15,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-
     steps:
       - name: 📥 Checkout code with full history and tags
         uses: actions/checkout@v4
@@ -26,20 +25,28 @@ jobs:
         id: get_tag
         run: |
           git fetch --tags
-          echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found, bootstrapping with v0.0.0"
+            LATEST_TAG="v0.0.0"
+          fi
+          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
 
       - name: Check if commits exist since latest tag
         id: check_commits
         run: |
           LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
-          COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
+          if [ "$LATEST_TAG" = "v0.0.0" ]; then
+            COUNT=$(git rev-list HEAD --count)
+          else
+            COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
+          fi
           echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
 
       - name: 📃 Get list of changed files (Markdown bullet list)
         if: steps.check_commits.outputs.commit_count != '0'
         id: changed_files
         run: |
-          # Generate bullet list of changed files
           BULLET_LIST="$(git diff --name-only HEAD^ HEAD | sed 's/^/- /')"
           echo "CHANGED<<EOF" >> $GITHUB_OUTPUT
           echo "$BULLET_LIST" >> $GITHUB_OUTPUT
@@ -77,8 +84,8 @@ jobs:
         if: steps.check_commits.outputs.commit_count != '0'
         id: pick_base_version
         run: |
-          LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version }}"
-          MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version }}"
+          LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version || '1.0.0' }}"
+          MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version || '1.0.0' }}"
           BASE_VERSION=$(python3 -c "from packaging import version; print(str(max(version.parse('$LATEST_RELEASE'), version.parse('$MANIFEST'))))")
           echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
 
@@ -147,11 +154,10 @@ jobs:
           body: |
             ### Changelog
             Files changed in this release:
-
             ${{ steps.changed_files.outputs.CHANGED }}
           files: ${{ steps.version.outputs.ZIP_NAME }}
 
-      # ----- Docker steps (unchanged except for minor fixes) -----
+      # ----- Docker steps -----
       - name: 🔍 Check if Dockerfile exists
         if: steps.check_commits.outputs.commit_count != '0'
         id: dockerfile_check
