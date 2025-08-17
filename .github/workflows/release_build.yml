@@ -1,5 +1,4 @@
 name: Build, Push, Publish
-
 on:
   push:
     branches:
@@ -25,22 +24,13 @@ jobs:
         id: get_tag
         run: |
           git fetch --tags
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || true)
-          if [ -z "$LATEST_TAG" ]; then
-            echo "No tags found, bootstrapping with v0.0.0"
-            LATEST_TAG="v0.0.0"
-          fi
-          echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
       - name: Check if commits exist since latest tag
         id: check_commits
         run: |
           LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
-          if [ "$LATEST_TAG" = "v0.0.0" ]; then
-            COUNT=$(git rev-list HEAD --count)
-          else
-            COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
-          fi
+          COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
           echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
 
       - name: 📃 Get list of changed files (Markdown bullet list)
@@ -84,8 +74,8 @@ jobs:
         if: steps.check_commits.outputs.commit_count != '0'
         id: pick_base_version
         run: |
-          LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version || '1.0.0' }}"
-          MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version || '1.0.0' }}"
+          LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version }}"
+          MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version }}"
           BASE_VERSION=$(python3 -c "from packaging import version; print(str(max(version.parse('$LATEST_RELEASE'), version.parse('$MANIFEST'))))")
           echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
 
@@ -117,15 +107,12 @@ jobs:
         if: steps.check_commits.outputs.commit_count != '0'
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
-          VERSION_FILE="manifest.json"
           AUTHOR="Ivan Carlos"
+          VERSION_FILE="manifest.json"
+          # Always update to chosen NEW_VERSION (ensures manifest catches up)
           if [ -f "$VERSION_FILE" ]; then
-            HAS_VERSION=$(jq 'has("version")' "$VERSION_FILE")
-            if [ "$HAS_VERSION" = "true" ]; then
-              jq --arg v "$VERSION" --arg a "$AUTHOR" '.version = $v | .author = $a' "$VERSION_FILE" > tmp.json && mv tmp.json "$VERSION_FILE"
-            else
-              jq --arg v "$VERSION" --arg a "$AUTHOR" '. + {version: $v, author: $a}' "$VERSION_FILE" > tmp.json && mv tmp.json "$VERSION_FILE"
-            fi
+            jq --arg v "$VERSION" --arg a "$AUTHOR" \
+               '.version = $v | .author = $a' "$VERSION_FILE" > tmp.json && mv tmp.json "$VERSION_FILE"
           else
             echo "{ \"version\": \"$VERSION\", \"author\": \"$AUTHOR\" }" > "$VERSION_FILE"
           fi
@@ -157,7 +144,7 @@ jobs:
             ${{ steps.changed_files.outputs.CHANGED }}
           files: ${{ steps.version.outputs.ZIP_NAME }}
 
-      # ----- Docker steps -----
+      # ----- Docker steps (unchanged except for minor fixes) -----
       - name: 🔍 Check if Dockerfile exists
         if: steps.check_commits.outputs.commit_count != '0'
         id: dockerfile_check
