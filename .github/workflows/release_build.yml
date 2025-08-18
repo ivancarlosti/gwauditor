@@ -1,4 +1,5 @@
 name: Build, Push, Publish
+
 on:
   push:
     branches:
@@ -6,6 +7,10 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '28 5 * * *'
+  workflow_run:
+    workflows: ["Sync Repo"]
+    types:
+      - completed
 
 jobs:
   release:
@@ -14,6 +19,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+
     steps:
       - name: 📥 Checkout code with full history and tags
         uses: actions/checkout@v4
@@ -26,35 +32,72 @@ jobs:
           git fetch --tags
           echo "latest_tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
-      - name: Check if commits exist since latest tag
+      - name: Check if meaningful commits exist since latest tag
         id: check_commits
         run: |
           LATEST_TAG="${{ steps.get_tag.outputs.latest_tag }}"
-          COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
-          echo "commit_count=$COUNT" >> $GITHUB_OUTPUT
-
-      - name: 📃 Get list of changed files (Markdown bullet list)
-        if: steps.check_commits.outputs.commit_count != '0'
-        id: changed_files
-        run: |
-          BULLET_LIST="$(git diff --name-only HEAD^ HEAD | sed 's/^/- /')"
-          echo "CHANGED<<EOF" >> $GITHUB_OUTPUT
-          echo "$BULLET_LIST" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          COUNT=$(git diff --name-only HEAD^ HEAD | wc -l)
-          echo "COUNT=$COUNT" >> $GITHUB_OUTPUT
+          CHANGED_FILES=$(git diff --name-only ${LATEST_TAG}..HEAD | grep -v '^manifest.json$' || true)
+          if [ -n "$CHANGED_FILES" ]; then
+            echo "commit_count=1" >> $GITHUB_OUTPUT
+            echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          else
+            echo "commit_count=0" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get latest release tag (from GitHub API)
-        if: steps.check_commits.outputs.commit_count != '0'
         id: get_latest_release
         run: |
           LATEST_RELEASE_TAG=$(curl -sL -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest" | jq -r .tag_name)
-          LATEST_RELEASE_VERSION="${LATEST_RELEASE_TAG#v}"
-          if [ -z "$LATEST_RELEASE_VERSION" ] || [ "$LATEST_RELEASE_VERSION" = "null" ]; then
-            LATEST_RELEASE_VERSION="1.0.0"
+          if [ -z "$LATEST_RELEASE_TAG" ] || [ "$LATEST_RELEASE_TAG" = "null" ]; then
+            LATEST_RELEASE_TAG="v1.0.0"
           fi
-          echo "latest_release_version=$LATEST_RELEASE_VERSION" >> $GITHUB_OUTPUT
+          echo "latest_release_tag=$LATEST_RELEASE_TAG" >> $GITHUB_OUTPUT
+          echo "latest_release_version=${LATEST_RELEASE_TAG#v}" >> $GITHUB_OUTPUT
+
+      # -------------------------------
+      # NEW: Sync manifest.json to last release version if behind
+      # -------------------------------
+      - name: 🛠 Ensure manifest.json matches latest release version
+        if: steps.check_commits.outputs.commit_count == '0'
+        run: |
+          if [ -f manifest.json ]; then
+            MANIFEST_VERSION=$(jq -r '.version // empty' manifest.json)
+          else
+            MANIFEST_VERSION=""
+          fi
+
+          LATEST_RELEASE_VERSION="${{ steps.get_latest_release.outputs.latest_release_version }}"
+
+          PYTHON_CODE="from packaging import version; \
+            print(version.parse('$LATEST_RELEASE_VERSION') > version.parse('$MANIFEST_VERSION') if '$MANIFEST_VERSION' else True)"
+          NEED_UPDATE=$(python3 -c "$PYTHON_CODE")
+
+          if [ "$NEED_UPDATE" = "True" ]; then
+            echo "Updating manifest.json to version $LATEST_RELEASE_VERSION (sync with release)"
+            jq --arg v "$LATEST_RELEASE_VERSION" '.version = $v' manifest.json > tmp.json && mv tmp.json manifest.json
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            git add manifest.json
+            git commit -m "Sync manifest.json to release $LATEST_RELEASE_VERSION [🔄]" || echo "Nothing to commit"
+            git push origin main || true
+          else
+            echo "Manifest.json is already up-to-date with the latest release."
+          fi
+
+      # -------------------------------
+      # Continue normal workflow if commits exist
+      # -------------------------------
+      - name: 📃 Get list of changed files (Markdown bullet list)
+        if: steps.check_commits.outputs.commit_count != '0'
+        id: changed_files
+        run: |
+          BULLET_LIST="$(echo "${{ steps.check_commits.outputs.changed_files }}" | sed 's/^/- /')"
+          echo "CHANGED<<EOF" >> $GITHUB_OUTPUT
+          echo "$BULLET_LIST" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          COUNT=$(echo "${{ steps.check_commits.outputs.changed_files }}" | wc -l)
+          echo "COUNT=$COUNT" >> $GITHUB_OUTPUT
 
       - name: Get manifest version
         if: steps.check_commits.outputs.commit_count != '0'
@@ -76,7 +119,8 @@ jobs:
         run: |
           LATEST_RELEASE="${{ steps.get_latest_release.outputs.latest_release_version }}"
           MANIFEST="${{ steps.get_manifest_version.outputs.manifest_version }}"
-          BASE_VERSION=$(python3 -c "from packaging import version; print(str(max(version.parse('$LATEST_RELEASE'), version.parse('$MANIFEST'))))")
+          BASE_VERSION=$(python3 -c "from packaging import version; \
+            print(str(max(version.parse('$LATEST_RELEASE'), version.parse('$MANIFEST'))))")
           echo "base_version=$BASE_VERSION" >> $GITHUB_OUTPUT
 
       - name: 🔢 Determine version
@@ -109,7 +153,6 @@ jobs:
           VERSION="${{ steps.version.outputs.VERSION }}"
           AUTHOR="Ivan Carlos"
           VERSION_FILE="manifest.json"
-          # Always update to chosen NEW_VERSION (ensures manifest catches up)
           if [ -f "$VERSION_FILE" ]; then
             jq --arg v "$VERSION" --arg a "$AUTHOR" \
                '.version = $v | .author = $a' "$VERSION_FILE" > tmp.json && mv tmp.json "$VERSION_FILE"
@@ -144,7 +187,7 @@ jobs:
             ${{ steps.changed_files.outputs.CHANGED }}
           files: ${{ steps.version.outputs.ZIP_NAME }}
 
-      # ----- Docker steps (unchanged except for minor fixes) -----
+      # ----- Docker steps -----
       - name: 🔍 Check if Dockerfile exists
         if: steps.check_commits.outputs.commit_count != '0'
         id: dockerfile_check
