@@ -75,11 +75,12 @@ You can find scripts related to mailbox delegation and mailbox archive to group 
 
 ## 🌐 Connect with me
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-@ivancarlos-0077B5)](https://www.linkedin.com/in/ivancarlos)
-[![X](https://img.shields.io/badge/X-@ivancarlos-000000)](https://x.com/ivancarlos)  
+[![X](https://img.shields.io/badge/X-@ivancarlos-000000)](https://x.com/ivancarlos)
 [![Telegram](https://img.shields.io/badge/Telegram-@ivancarlos-26A5E4)](https://t.me/ivancarlos)
-[![Discord](https://img.shields.io/badge/Discord-@ivancarlos.me-5865F2)](https://icc.gg/discord)
-[![Reddit](https://img.shields.io/badge/Reddit-@ivandoomer-5865F2)](https://icc.gg/reddit)  
-[![Website](https://img.shields.io/badge/Website-ivancarlos.me-FF6B6B)](https://ivancarlos.me)
+[![Reddit](https://img.shields.io/badge/Reddit-@ivandoomer-FF4500)](https://icc.gg/reddit)  
+[![Discord](https://img.shields.io/badge/Discord-@ivancarlos.it-5865F2)](https://icc.gg/discord)
+[![Bluesky](https://img.shields.io/badge/Bluesky-@ivancarlos.it-3B99FC)](https://icc.gg/bluesky)
+[![Website](https://img.shields.io/badge/Website-ivancarlos.it-FF6B6B)](https://ivancarlos.it)
 
 [cc]: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/adding-a-code-of-conduct-to-your-project
 [contributing]: https://docs.github.com/en/articles/setting-guidelines-for-repository-contributors
