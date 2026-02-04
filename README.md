@@ -1,6 +1,10 @@
 # Google Workspace Auditor script
 This script collects users, groups and Shared Drives of a Google Workspace environment on .xlsx file for audit and review purposes
 
+<!-- buttons -->
+
+<!-- endbuttons -->
+
 ## Details
 This script collects users, groups, mailboxes delegation, Shared Drives, YouTube accounts, Analytics accounts, policies of a [Google Workspace](https://workspace.google.com/) environment on .xlsx file for audit and review purposes, the file is archived in a .zip file including a screenshot with hash MD5 of the .xlsx file and the script executed. Note that it's prepared to run on [GAM](https://github.com/GAM-team/GAM/) configured for multiple projects, change accordly if needed. This project also offer extra features:
 - Archive mailbox messages to group
