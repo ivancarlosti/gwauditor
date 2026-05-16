@@ -1,5 +1,5 @@
 # Google Workspace admin script (gwadmin)
-A PowerShell launcher for common Google Workspace administration tasks driven by [GAM](https://github.com/GAM-team/GAM/) (GAMADV-XTD3). Designed around offboarding-style operations: copying or moving mailbox messages, Drive content, and calendars between users, plus mailbox delegation management.
+A PowerShell launcher for common Google Workspace administration tasks driven by [GAM](https://github.com/GAM-team/GAM/) (GAMADV-XTD3). Designed around offboarding-style operations: archiving a user's mailbox into a group, moving their Drive content into a Shared Drive, transferring their calendars and event-organizer rights to another account, and managing mailbox delegation.
 
 <!-- buttons -->
 [![Stars](https://img.shields.io/github/stars/ivancarlosti/gwauditor?label=⭐%20Stars&color=gold&style=flat)](https://github.com/ivancarlosti/gwauditor/stargazers)
@@ -25,28 +25,25 @@ The launcher exposes a numbered menu. Each item validates the admin account, the
    ```
    gam user <source> archive messages <targetGroup> max_to_archive 0 doit
    ```
-2. **Copy mailbox messages to another account** — copies all messages from one user to another under a label named `Copied from <source>`, so the receiving user can immediately see where the messages came from.
-   ```
-   gam user <source> copy messages <target> addlabel "Copied from <source>" max_to_copy 0 doit
-   ```
-3. **Move Drive content to a new Shared Drive** — creates a fresh Shared Drive named `Migrated from <source> - <datetime>` and moves the source user's My Drive content into it.
+2. **Move Drive content to a new Shared Drive** — creates a fresh Shared Drive named `Migrated from <source> - <datetime>` and moves the source user's My Drive content into it.
    ```
    gam user <admin>  create teamdrive "Migrated from <source> - <datetime>"
-   gam user <source> transfer drive <admin> teamdrive <sdid> keepuser
+   gam user <admin>  add drivefileacl <sdid> user <source> role organizer
+   gam user <source> move drivefile root teamdriveparentid <sdid> mergewithparent
    ```
-4. **Transfer calendars to another account** — reassigns secondary calendars and, for the primary calendar (which Google won't let you transfer), reassigns the organizer of all *future* events to the target user. After this runs, the target user can cancel those events and Google will send proper cancellation notices to invitees, even if the source user is later deleted.
+3. **Transfer calendars to another account** — reassigns secondary calendars and, for the primary calendar (which Google won't let you transfer), reassigns the organizer of all *future* events to the target user. After this runs, the target user can cancel those events and Google will send proper cancellation notices to invitees, even if the source user is later deleted.
    ```
    gam user <source> transfer calendars <target>
    gam user <source> update event <eventid> calendar primary newowner <target>
    ```
-5. **List / add / remove mailbox delegation** — manage who has delegated access to a mailbox.
+4. **List / add / remove mailbox delegation** — manage who has delegated access to a mailbox.
    ```
    gam user <source> show delegates
    gam user <source> add delegates <delegate>
    gam user <source> del delegates <delegate>
    ```
-6. **Change GAM project** — re-select which GAM multi-project profile to use.
-7. **Exit script**.
+5. **Change GAM project** — re-select which GAM multi-project profile to use.
+6. **Exit script**.
 
 ## Configuration
 

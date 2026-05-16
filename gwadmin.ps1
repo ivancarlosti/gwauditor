@@ -189,27 +189,7 @@ function Invoke-CopyMessagesToGroup {
 }
 
 # ------------------------------------------------------------------
-# Feature 2: Copy mailbox messages to another account
-# ------------------------------------------------------------------
-
-function Invoke-CopyMessagesToAccount {
-    Show-FeatureHeader "COPY MAILBOX MESSAGES TO ANOTHER ACCOUNT"
-
-    $sourceAddress = Prompt-User "Please enter the source mailbox address"
-    $targetAddress = Prompt-User "Please enter the target mailbox address"
-
-    $labelName = "Copied from $sourceAddress"
-
-    Write-Host
-    Write-Host "Messages will be copied under label: $labelName"
-    Write-Host "Running: gam user $sourceAddress copy messages $targetAddress addlabel `"$labelName`" max_to_copy 0 doit"
-    & "$GAMpath\gam.exe" user $sourceAddress copy messages $targetAddress addlabel $labelName max_to_copy 0 doit
-
-    Show-FeatureFooter "COPY MAILBOX MESSAGES TO ANOTHER ACCOUNT"
-}
-
-# ------------------------------------------------------------------
-# Feature 3: Move Drive content to a new Shared Drive
+# Feature 2: Move Drive content to a new Shared Drive
 # ------------------------------------------------------------------
 
 function Invoke-MoveDriveToSharedDrive {
@@ -255,7 +235,7 @@ function Invoke-MoveDriveToSharedDrive {
 }
 
 # ------------------------------------------------------------------
-# Feature 4: Transfer calendars to another account
+# Feature 3: Transfer calendars to another account
 # ------------------------------------------------------------------
 
 function Invoke-TransferCalendars {
@@ -305,7 +285,7 @@ function Invoke-TransferCalendars {
 }
 
 # ------------------------------------------------------------------
-# Feature 5: Mailbox delegation
+# Feature 4: Mailbox delegation
 # ------------------------------------------------------------------
 
 function Invoke-MailboxDelegation {
@@ -360,12 +340,11 @@ function Show-Menu {
     Write-Host
     Write-Host "Please choose an option:"
     Write-Host "1. Copy mailbox messages to a group"
-    Write-Host "2. Copy mailbox messages to another account"
-    Write-Host "3. Move Drive content to a new Shared Drive"
-    Write-Host "4. Transfer calendars to another account"
-    Write-Host "5. List, add or remove mailbox delegation"
-    Write-Host "6. Change GAM project"
-    Write-Host "7. Exit script"
+    Write-Host "2. Move Drive content to a new Shared Drive"
+    Write-Host "3. Transfer calendars to another account"
+    Write-Host "4. List, add or remove mailbox delegation"
+    Write-Host "5. Change GAM project"
+    Write-Host "6. Exit script"
     return (Read-Host -Prompt "Enter your choice")
 }
 
@@ -389,12 +368,11 @@ while ($true) {
     try {
         switch ($option) {
             '1' { Invoke-CopyMessagesToGroup }
-            '2' { Invoke-CopyMessagesToAccount }
-            '3' { Invoke-MoveDriveToSharedDrive }
-            '4' { Invoke-TransferCalendars }
-            '5' { Invoke-MailboxDelegation }
-            '6' { Select-GAMProject }
-            '7' {
+            '2' { Invoke-MoveDriveToSharedDrive }
+            '3' { Invoke-TransferCalendars }
+            '4' { Invoke-MailboxDelegation }
+            '5' { Select-GAMProject }
+            '6' {
                 Write-Output "Exiting script."
                 break
             }
@@ -405,5 +383,5 @@ while ($true) {
         Write-Host "An error occurred: $_"
     }
 
-    if ($option -eq '7') { break }
+    if ($option -eq '6') { break }
 }
