@@ -1,5 +1,5 @@
 # Google Workspace admin script (gwadmin)
-A PowerShell launcher for common Google Workspace administration tasks driven by [GAM](https://github.com/GAM-team/GAM/) (GAMADV-XTD3). Designed around offboarding-style operations: archiving a user's mailbox into a group, moving their Drive content into a Shared Drive, transferring their calendars and event-organizer rights to another account, and managing mailbox delegation.
+A PowerShell launcher for common Google Workspace administration tasks driven by [GAM](https://github.com/GAM-team/GAM/). Designed around offboarding-style operations: archiving a user's mailbox into a group, moving their Drive content into a Shared Drive, transferring their calendars and event-organizer rights to another account, and managing mailbox delegation.
 
 <!-- buttons -->
 [![Stars](https://img.shields.io/github/stars/ivancarlosti/gwauditor?label=⭐%20Stars&color=gold&style=flat)](https://github.com/ivancarlosti/gwauditor/stargazers)
@@ -72,7 +72,7 @@ If PowerShell blocks the script with "Running scripts is disabled on this system
 
 ## Requirements
 * Windows 10+ or Windows Server 2019+
-* [GAMADV-XTD3](https://github.com/GAM-team/GAM/) installed and configured for multi-project use
+* [GAM](https://github.com/GAM-team/GAM/) installed and configured for multi-project use
 * PowerShell 5.1 or later
 
 <!-- footer -->
