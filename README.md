@@ -2,16 +2,16 @@
 A PowerShell launcher for common Google Workspace administration tasks driven by [GAM](https://github.com/GAM-team/GAM/). Designed around offboarding-style operations: archiving a user's mailbox into a group, moving their Drive content into a Shared Drive, transferring their calendars and event-organizer rights to another account, and managing mailbox delegation.
 
 <!-- buttons -->
-[![Stars](https://img.shields.io/github/stars/ivancarlosti/gwauditor?label=⭐%20Stars&color=gold&style=flat)](https://github.com/ivancarlosti/gwauditor/stargazers)
-[![Watchers](https://img.shields.io/github/watchers/ivancarlosti/gwauditor?label=Watchers&style=flat&color=red)](https://github.com/sponsors/ivancarlosti)
-[![Forks](https://img.shields.io/github/forks/ivancarlosti/gwauditor?label=Forks&style=flat&color=ff69b4)](https://github.com/sponsors/ivancarlosti)
-[![Downloads](https://img.shields.io/github/downloads/ivancarlosti/gwauditor/total?label=Downloads&color=success)](https://github.com/ivancarlosti/gwauditor/releases)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ivancarlosti/gwauditor?label=Activity)](https://github.com/ivancarlosti/gwauditor/pulse)  
-[![GitHub Issues](https://img.shields.io/github/issues/ivancarlosti/gwauditor?label=Issues&color=orange)](https://github.com/ivancarlosti/gwauditor/issues)
-[![License](https://img.shields.io/github/license/ivancarlosti/gwauditor?label=License)](LICENSE)
-[![GitHub last commit](https://img.shields.io/github/last-commit/ivancarlosti/gwauditor?label=Last%20Commit)](https://github.com/ivancarlosti/gwauditor/commits)
-[![Security](https://img.shields.io/badge/Security-View%20Here-purple)](https://github.com/ivancarlosti/gwauditor/security)  
-[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-2.1-4baaaa)](https://github.com/ivancarlosti/gwauditor?tab=coc-ov-file)
+[![Stars](https://img.shields.io/github/stars/ivancarlosti/gwadmin?label=⭐%20Stars&color=gold&style=flat)](https://github.com/ivancarlosti/gwadmin/stargazers)
+[![Watchers](https://img.shields.io/github/watchers/ivancarlosti/gwadmin?label=Watchers&style=flat&color=red)](https://github.com/sponsors/ivancarlosti)
+[![Forks](https://img.shields.io/github/forks/ivancarlosti/gwadmin?label=Forks&style=flat&color=ff69b4)](https://github.com/sponsors/ivancarlosti)
+[![Downloads](https://img.shields.io/github/downloads/ivancarlosti/gwadmin/total?label=Downloads&color=success)](https://github.com/ivancarlosti/gwadmin/releases)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/ivancarlosti/gwadmin?label=Activity)](https://github.com/ivancarlosti/gwadmin/pulse)  
+[![GitHub Issues](https://img.shields.io/github/issues/ivancarlosti/gwadmin?label=Issues&color=orange)](https://github.com/ivancarlosti/gwadmin/issues)
+[![License](https://img.shields.io/github/license/ivancarlosti/gwadmin?label=License)](LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/ivancarlosti/gwadmin?label=Last%20Commit)](https://github.com/ivancarlosti/gwadmin/commits)
+[![Security](https://img.shields.io/badge/Security-View%20Here-purple)](https://github.com/ivancarlosti/gwadmin/security)  
+[![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-2.1-4baaaa)](https://github.com/ivancarlosti/gwadmin?tab=coc-ov-file)
 [![GitHub Sponsors](https://img.shields.io/github/sponsors/ivancarlosti?label=GitHub%20Sponsors&color=ffc0cb)][sponsor]
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00)][buymeacoffee]
 [![Patreon](https://img.shields.io/badge/Patreon-f96854)][patreon]
@@ -63,7 +63,7 @@ $destinationpath = (New-Object -ComObject Shell.Application).NameSpace('shell:Do
 Check `testing-guideline.md` as a suggested testing checklist.
 
 ## Instructions
-* Download the latest release and extract it locally ([releases](https://github.com/ivancarlosti/gwauditor/releases/latest)).
+* Download the latest release and extract it locally ([releases](https://github.com/ivancarlosti/gwadmin/releases/latest)).
 * Adjust the variables in `gwadmin.ps1` if needed.
 * Run `gwadmin.ps1` from PowerShell (right-click → Run with PowerShell, or `powershell -ExecutionPolicy Bypass -File .\gwadmin.ps1`).
 * Pick a GAM project, then choose a menu option and follow the prompts.
