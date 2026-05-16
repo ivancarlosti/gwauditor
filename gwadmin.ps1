@@ -241,13 +241,12 @@ function Invoke-MoveDriveToSharedDrive {
 
     Write-Host
     Write-Host "New Shared Drive ID: $sdid"
-    Write-Host "Granting admin organizer access on the Shared Drive..."
-    & "$GAMpath\gam.exe" user $adminAddress add drivefileacl $sdid user $adminAddress role organizer
+    Write-Host "Granting source user organizer access on the Shared Drive..."
+    & "$GAMpath\gam.exe" user $adminAddress add drivefileacl $sdid user $sourceAddress role organizer
 
-    $query = "'me' in owners and trashed = false"
     Write-Host
-    Write-Host "Running: gam user $sourceAddress transfer ownership query `"$query`" $adminAddress teamdriveparentid $sdid"
-    & "$GAMpath\gam.exe" user $sourceAddress transfer ownership query $query $adminAddress teamdriveparentid $sdid
+    Write-Host "Running: gam user $sourceAddress move drivefile root teamdriveparentid $sdid mergewithparent"
+    & "$GAMpath\gam.exe" user $sourceAddress move drivefile root teamdriveparentid $sdid mergewithparent
 
     Write-Host
     Write-Host "Drive content moved into Shared Drive '$sharedDriveName' (ID: $sdid)."
