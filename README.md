@@ -1,5 +1,5 @@
-# Google Workspace Auditor script
-This script collects users, groups and Shared Drives of a Google Workspace environment on .xlsx file for audit and review purposes
+# Google Workspace admin script (gwadmin)
+A PowerShell launcher for common Google Workspace administration tasks driven by [GAM](https://github.com/GAM-team/GAM/) (GAMADV-XTD3). Designed around offboarding-style operations: copying or moving mailbox messages, Drive content, and calendars between users, plus mailbox delegation management.
 
 <!-- buttons -->
 [![Stars](https://img.shields.io/github/stars/ivancarlosti/gwauditor?label=⭐%20Stars&color=gold&style=flat)](https://github.com/ivancarlosti/gwauditor/stargazers)
@@ -17,51 +17,66 @@ This script collects users, groups and Shared Drives of a Google Workspace envir
 [![Patreon](https://img.shields.io/badge/Patreon-f96854)][patreon]
 <!-- endbuttons -->
 
-## Details
-This script collects users, groups, mailboxes delegation, Shared Drives, YouTube accounts, Analytics accounts, policies of a [Google Workspace](https://workspace.google.com/) environment on .xlsx file for audit and review purposes, the file is archived in a .zip file including a screenshot with hash MD5 of the .xlsx file and the script executed. Note that it's prepared to run on [GAM](https://github.com/GAM-team/GAM/) configured for multiple projects, change accordly if needed. This project also offer extra features:
-- Archive mailbox messages to group
-- List, add or remove mailbox delegation
+## Features
 
-Set variables if different of defined:
+The launcher exposes a numbered menu. Each item validates the admin account, the source mailbox, and (where applicable) the target before running its GAM command.
+
+1. **Copy mailbox messages to a group** — archives every message from a user mailbox into a Google Group's archive.
+   ```
+   gam user <source> archive messages <targetGroup> max_to_archive 0 doit
+   ```
+2. **Copy mailbox messages to another account** — copies all messages from one user to another under a label named `Copied from <source>`, so the receiving user can immediately see where the messages came from.
+   ```
+   gam user <source> copy messages <target> addlabel "Copied from <source>" max_to_copy 0 doit
+   ```
+3. **Move Drive content to a new Shared Drive** — creates a fresh Shared Drive named `Migrated from <source> - <datetime>` and moves the source user's My Drive content into it.
+   ```
+   gam user <admin>  create teamdrive "Migrated from <source> - <datetime>"
+   gam user <source> transfer drive <admin> teamdrive <sdid> keepuser
+   ```
+4. **Transfer calendars to another account** — reassigns secondary calendars and, for the primary calendar (which Google won't let you transfer), reassigns the organizer of all *future* events to the target user. After this runs, the target user can cancel those events and Google will send proper cancellation notices to invitees, even if the source user is later deleted.
+   ```
+   gam user <source> transfer calendars <target>
+   gam user <source> update event <eventid> calendar primary newowner <target>
+   ```
+5. **List / add / remove mailbox delegation** — manage who has delegated access to a mailbox.
+   ```
+   gam user <source> show delegates
+   gam user <source> add delegates <delegate>
+   gam user <source> del delegates <delegate>
+   ```
+6. **Change GAM project** — re-select which GAM multi-project profile to use.
+7. **Exit script**.
+
+## Configuration
+
+Set variables at the top of `gwadmin.ps1` if your install differs from the defaults:
 ```
 $GAMpath = "C:\GAM7"
 $gamsettings = "$env:USERPROFILE\.gam"
 $destinationpath = (New-Object -ComObject Shell.Application).NameSpace('shell:Downloads').Self.Path
 ```
 
-`$GAMpath` defines the GAM application folder
+`$GAMpath` — the GAM application folder.
 
-`$gamsettings` defines the settings folder of GAM
+`$gamsettings` — the GAM multi-project settings folder.
 
-`$destinationpath` defines the location were script result is saved
+`$destinationpath` — where any local output ends up (currently used only for temp files).
 
-Check `testing-guideline.md` file as suggestion for testing guideline
-
-You can find scripts related to mailbox delegation and mailbox archive to group in `Other scripts` folder
+Check `testing-guideline.md` as a suggested testing checklist.
 
 ## Instructions
-* Save the last release version and extract files locally (download [here](https://github.com/ivancarlosti/gwauditor/releases/latest))
-* Change variables of `mainscript.ps1` if needed
-* Run `mainscript.ps1` on PowerShell (right-click on file > Run with PowerShell)
-* Follow instructions selecting project name, option 1 to generate audit report and collect .zip file on `$destinationpath`
+* Download the latest release and extract it locally ([releases](https://github.com/ivancarlosti/gwauditor/releases/latest)).
+* Adjust the variables in `gwadmin.ps1` if needed.
+* Run `gwadmin.ps1` from PowerShell (right-click → Run with PowerShell, or `powershell -ExecutionPolicy Bypass -File .\gwadmin.ps1`).
+* Pick a GAM project, then choose a menu option and follow the prompts.
 
-## Screenshots
-*parts ommited on screenshots are related to project/profile name
-
-![image](https://github.com/user-attachments/assets/489b37e0-c042-4df2-9ac9-4f5871a8d95f)
-*Script startup*
-
-![image](https://github.com/user-attachments/assets/08cb9aab-cb7a-4444-bf1e-f32a518ba190)
-*Script completed*
-
-![image](https://github.com/user-attachments/assets/6d642c0c-dfd8-4810-b674-6280b81857ce)
-*.zip file content*
+If PowerShell blocks the script with "Running scripts is disabled on this system", see `POWERSHELL_ISSUE.md`.
 
 ## Requirements
 * Windows 10+ or Windows Server 2019+
-* [GAM v5+](https://github.com/GAM-team/GAM/) using multiproject setup 
-* PowerShell
-* Module `ImportExcel` on PowerShell (not required to run extra features)
+* [GAMADV-XTD3](https://github.com/GAM-team/GAM/) installed and configured for multi-project use
+* PowerShell 5.1 or later
 
 <!-- footer -->
 ---
