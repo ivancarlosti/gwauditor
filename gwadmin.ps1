@@ -26,9 +26,10 @@ function Show-FeatureHeader {
     Write-Host "### $title ###"
     Write-Host
     Write-Host "GAM project selected: $clientName"
+    Write-Host "Admin account:        $adminAddress"
     Write-Host "GAM application path: $GAMpath"
-    Write-Host "Project path: $gamsettings"
-    Write-Host "Date and time: $datetime"
+    Write-Host "Project path:         $gamsettings"
+    Write-Host "Date and time:        $datetime"
     Write-Host
 }
 
@@ -166,6 +167,7 @@ function Select-GAMProject {
 
     & "$GAMpath\gam.exe" select $selectedProject save
     $global:clientName = $selectedProject
+    $global:adminAddress = $null
     Write-Host "GAM project selected: $selectedProject"
 }
 
@@ -176,7 +178,6 @@ function Select-GAMProject {
 function Invoke-CopyMessagesToGroup {
     Show-FeatureHeader "COPY MAILBOX MESSAGES TO A GROUP"
 
-    $adminAddress  = Prompt-Admin
     $sourceAddress = Prompt-User  "Please enter the source mailbox address"
     $targetAddress = Prompt-Group "Please enter the target group address"
 
@@ -194,7 +195,6 @@ function Invoke-CopyMessagesToGroup {
 function Invoke-CopyMessagesToAccount {
     Show-FeatureHeader "COPY MAILBOX MESSAGES TO ANOTHER ACCOUNT"
 
-    $adminAddress  = Prompt-Admin
     $sourceAddress = Prompt-User "Please enter the source mailbox address"
     $targetAddress = Prompt-User "Please enter the target mailbox address"
 
@@ -215,7 +215,6 @@ function Invoke-CopyMessagesToAccount {
 function Invoke-MoveDriveToSharedDrive {
     Show-FeatureHeader "MOVE DRIVE CONTENT TO A NEW SHARED DRIVE"
 
-    $adminAddress  = Prompt-Admin
     $sourceAddress = Prompt-User "Please enter the source mailbox address (Drive owner)"
 
     $sharedDriveName = "Migrated from $sourceAddress - $datetime"
@@ -245,9 +244,10 @@ function Invoke-MoveDriveToSharedDrive {
     Write-Host "Granting admin organizer access on the Shared Drive..."
     & "$GAMpath\gam.exe" user $adminAddress add drivefileacl $sdid user $adminAddress role organizer
 
+    $query = "'me' in owners and trashed = false"
     Write-Host
-    Write-Host "Running: gam user $sourceAddress transfer drive $adminAddress teamdrive $sdid keepuser"
-    & "$GAMpath\gam.exe" user $sourceAddress transfer drive $adminAddress teamdrive $sdid keepuser
+    Write-Host "Running: gam user $sourceAddress transfer ownership query `"$query`" $adminAddress teamdriveparentid $sdid"
+    & "$GAMpath\gam.exe" user $sourceAddress transfer ownership query $query $adminAddress teamdriveparentid $sdid
 
     Write-Host
     Write-Host "Drive content moved into Shared Drive '$sharedDriveName' (ID: $sdid)."
@@ -262,7 +262,6 @@ function Invoke-MoveDriveToSharedDrive {
 function Invoke-TransferCalendars {
     Show-FeatureHeader "TRANSFER CALENDARS TO ANOTHER ACCOUNT"
 
-    $adminAddress  = Prompt-Admin
     $sourceAddress = Prompt-User "Please enter the source mailbox address"
     $targetAddress = Prompt-User "Please enter the target mailbox address"
 
@@ -313,8 +312,6 @@ function Invoke-TransferCalendars {
 function Invoke-MailboxDelegation {
     Show-FeatureHeader "MANAGE MAILBOX DELEGATION"
 
-    $adminAddress = Prompt-Admin
-
     $filter = "setting.type.matches('.*gmail.mail_delegation')"
     [void](Check-PolicySettings -filter $filter)
 
@@ -360,6 +357,7 @@ function Invoke-MailboxDelegation {
 function Show-Menu {
     cls
     Write-Host "GAM project selected: $clientName"
+    Write-Host "Admin account:        $adminAddress"
     Write-Host
     Write-Host "Please choose an option:"
     Write-Host "1. Copy mailbox messages to a group"
@@ -375,6 +373,16 @@ function Show-Menu {
 while ($true) {
     if (-not $clientName) {
         Select-GAMProject
+    }
+
+    if (-not $adminAddress) {
+        cls
+        Write-Host "GAM project selected: $clientName"
+        Write-Host
+        Write-Host "Please provide the admin account that will be used for the operations."
+        Write-Host "It will be reused for every option until you change the GAM project."
+        Write-Host
+        $global:adminAddress = Prompt-Admin
     }
 
     $option = Show-Menu
